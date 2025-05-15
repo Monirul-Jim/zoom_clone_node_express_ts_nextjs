@@ -6,6 +6,7 @@ import { socketVerifyToken as verifyToken } from '../../utils/socketVerifyToken'
  * @param req The request object.
  * @param res The response object.
  */
+
 export const createMeetingController = async (req: Request, res: Response): Promise<void> => { //Added Promise<void>
     try {
         const { startTime, password } = req.body;
@@ -15,7 +16,7 @@ export const createMeetingController = async (req: Request, res: Response): Prom
             return;
         }
         const decoded = verifyToken(token);
-        const hostId = decoded.userId;
+        const hostId = decoded._id;
 
         const meetingId = await createMeeting(hostId, startTime, password);
         res.status(201).json({ meetingId, message: 'Meeting created successfully' });

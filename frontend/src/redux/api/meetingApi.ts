@@ -1,21 +1,21 @@
 import { baseApi } from "./baseApi";
 
-const authApi = baseApi.injectEndpoints({
+const meetingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    registerUser: builder.mutation({
-      query: (userInfo) => ({
-        url: "/auth/register",
+    createMeeting: builder.mutation({
+      query: (body) => ({
+        url: "/meeting",
         method: "POST",
-        body: userInfo,
+        body,
       }),
     }),
-    login: builder.mutation({
+    meetingJoin: builder.mutation({
       query: (credentials) => ({
-        url: "/auth/login",
+        url: "/meeting/join",
         method: "POST",
         body: credentials,
       }),
     }),
   }),
 });
-export const { useRegisterUserMutation, useLoginMutation } = authApi;
+export const { useCreateMeetingMutation, useMeetingJoinMutation } = meetingApi;
