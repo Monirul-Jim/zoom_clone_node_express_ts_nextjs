@@ -40,7 +40,7 @@ export const joinMeetingController = async (req: Request, res: Response): Promis
             return;
         }
         const decoded = verifyToken(token);
-        const userId = decoded.userId;
+        const userId = decoded._id;
 
         const result = await joinMeeting(userId, meetingId, password);
         if (typeof result === 'string') { // Check for error message

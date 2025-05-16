@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 
 import authReducer from "./feature/authSlice";
-
+import meetingReducer from './feature/meetingSlice'
 import {
   persistStore,
   persistReducer,
@@ -25,6 +25,7 @@ export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
     [baseApi.reducerPath]: baseApi.reducer,
+    meeting: meetingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

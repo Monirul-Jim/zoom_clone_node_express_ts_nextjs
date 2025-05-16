@@ -22,73 +22,156 @@ export const handleSocketConnection = (io: Server) => {
         console.log('A user connected:', socket.id);
 
         // --- Join Meeting (Socket) ---
+        // socket.on('join-meeting', async ({ meetingId, token }) => {
+        //     try {
+        //         const decoded = verifyToken(token);
+        //         const userId = decoded._id;
+
+        //         // Add user to the Socket.IO room
+        //         socket.join(meetingId);
+
+        //          // Find the user in your database to get the name.
+        //         const user = await RegistrationModel.findById(userId);
+        //         if (!user) {
+        //             throw new Error("User not found"); // Handle this error appropriately
+        //         }
+        //         const userName = `${user.firstName} ${user.lastName}`;
+
+        //         // Store the user's socket ID
+        //         userSockets.push({ userId, socketId: socket.id });
+
+        //         // Notify other participants in the meeting
+        //         io.to(meetingId).emit('user-joined', { userId, userName });
+
+        //         console.log(`User ${userId} joined meeting ${meetingId}`);
+        //          // Send a welcome message to the user who just joined.
+        //         socket.emit('message', {
+        //             userId: 'system',
+        //             userName: 'System',
+        //             text: `Welcome to the meeting, ${userName}!`,
+        //             timestamp: new Date(),
+        //         });
+
+        //     } catch (error: any) {
+        //         console.error("Join Meeting Socket Error:", error);
+        //         socket.emit('error', { message: 'Failed to join meeting: ' + error.message });
+        //     }
+        // });
         socket.on('join-meeting', async ({ meetingId, token }) => {
-            try {
-                const decoded = verifyToken(token);
-                const userId = decoded.userId;
+      try {
+        const decoded = verifyToken(token);
+        const userId = decoded._id;
 
-                // Add user to the Socket.IO room
-                socket.join(meetingId);
+        // Add user to the Socket.IO room
+        socket.join(meetingId);
 
-                 // Find the user in your database to get the name.
-                const user = await RegistrationModel.findById(userId);
-                if (!user) {
-                    throw new Error("User not found"); // Handle this error appropriately
-                }
-                const userName = `${user.firstName} ${user.lastName}`;
+        // Find the user in your database to get the name.
+        const user = await RegistrationModel.findById(userId);
+        if (!user) {
+          throw new Error("User not found");
+        }
+        const userName = `${user.firstName} ${user.lastName}`;
 
-                // Store the user's socket ID
-                userSockets.push({ userId, socketId: socket.id });
+        // Store the user's socket ID
+        userSockets.push({ userId, socketId: socket.id });
 
-                // Notify other participants in the meeting
-                io.to(meetingId).emit('user-joined', { userId, userName });
+        // Notify other participants in the meeting
+        io.to(meetingId).emit('user-joined', { userId, userName });
 
-                console.log(`User ${userId} joined meeting ${meetingId}`);
-                 // Send a welcome message to the user who just joined.
-                socket.emit('message', {
-                    userId: 'system',
-                    userName: 'System',
-                    text: `Welcome to the meeting, ${userName}!`,
-                    timestamp: new Date(),
-                });
+        console.log(`User ${userId} joined meeting ${meetingId}`);
 
-            } catch (error: any) {
-                console.error("Join Meeting Socket Error:", error);
-                socket.emit('error', { message: 'Failed to join meeting: ' + error.message });
-            }
+        // --- Emit initial messages to the newly joined user ---
+        const meeting = await MeetingModel.findOne({ meetingId });
+        if (meeting && meeting.messages) {
+          socket.emit('initial-messages', meeting.messages);
+        }
+
+        // Send a welcome message to the user who just joined.
+        socket.emit('message', {
+          userId: 'system',
+          userName: 'System',
+          text: `Welcome to the meeting, ${userName}!`,
+          timestamp: new Date(),
         });
+
+      } catch (error: any) {
+        console.error("Join Meeting Socket Error:", error);
+        socket.emit('error', { message: 'Failed to join meeting: ' + error.message });
+      }
+    });
 
         // --- Send Message (Socket) ---
-        socket.on('message', async ({ meetingId, text, replyTo }) => {
-            try {
-                const token = socket.handshake.headers.authorization?.split(' ')[1];
-                 if (!token) {
-                    throw new Error('Unauthorized');
-                 }
-                const decoded = verifyToken(token);
-                const userId = decoded.userId;
+        // Send Message (Socket)
+socket.on('message', async ({ meetingId, text, replyTo, token }) => {
+  try {
+      if (!token) throw new Error('Unauthorized');
+      const decoded = verifyToken(token);
+      const userId = decoded._id;
+      console.log(meetingId, 'again token meetingId')
 
-                // Find the user in your database to get the name.
-                const user = await RegistrationModel.findById(userId);
-                 if (!user) {
-                    throw new Error("User not found"); // Handle this error appropriately
-                 }
-                const userName = `${user.firstName} ${user.lastName}`;
-                const message: Message = {
-                    userId,
-                    userName,
-                    text,
-                    timestamp: new Date(),
-                    replyTo,
-                };
+    const user = await RegistrationModel.findById(userId);
+    if (!user) throw new Error("User not found");
 
-                // Broadcast the message to all participants in the meeting
-                io.to(meetingId).emit('message', message);
-            } catch (error: any) {
-                 console.error("Message Socket Error:", error);
-                socket.emit('error', { message: 'Failed to send message: ' + error.message });
-            }
-        });
+    const userName = `${user.firstName} ${user.lastName}`;
+    const message: Message = {
+      userId,
+      userName,
+      text,
+      timestamp: new Date(),
+      replyTo,
+    };
+
+    // Save the message in the meeting document
+    const meeting = await MeetingModel.findOne({ meetingId });
+    if (!meeting) throw new Error("Meeting not found");
+
+    meeting.messages = meeting.messages || []; // initialize if missing
+    meeting.messages.push(message);
+    await meeting.save();
+
+    // Emit to all participants
+    io.to(meetingId).emit('message', message);
+
+  } catch (error: any) {
+    console.error("Message Socket Error:", error);
+    socket.emit('error', { message: 'Failed to send message: ' + error.message });
+  }
+});
+
+        // socket.on('message', async ({ meetingId, text, replyTo,token }) => {
+        //     console.log('Message received:', text);
+
+        //     try {
+        //         // const token = socket.handshake.headers.authorization?.split(' ')[1];
+        //         console.log(token)
+        //          if (!token) {
+        //             throw new Error('Unauthorized');
+        //          }
+        //         const decoded = verifyToken(token);
+        //         const userId = decoded._id;
+
+        //         // Find the user in your database to get the name.
+        //         const user = await RegistrationModel.findById(userId);
+        //          if (!user) {
+        //             throw new Error("User not found"); // Handle this error appropriately
+        //          }
+        //         const userName = `${user.firstName} ${user.lastName}`;
+        //         const message: Message = {
+        //             userId,
+        //             userName,
+        //             text,
+        //             timestamp: new Date(),
+        //             replyTo,
+        //         };
+                
+
+        //         // Broadcast the message to all participants in the meeting
+        //         io.to(meetingId).emit('message', message);
+        //     } catch (error: any) {
+        //          console.error("Message Socket Error:", error);
+        //         socket.emit('error', { message: 'Failed to send message: ' + error.message });
+        //     }
+        // });
 
          // --- Leave Meeting (Socket) ---
         socket.on('leave-meeting', async ({ meetingId }) => {
@@ -98,7 +181,7 @@ export const handleSocketConnection = (io: Server) => {
                     throw new Error('Unauthorized');
                 }
                 const decoded = verifyToken(token);
-                const userId = decoded.userId;
+                const userId = decoded._id;
 
                 // Remove the user from the Socket.IO room
                 socket.leave(meetingId);
