@@ -13,6 +13,7 @@ interface Message {
 interface UserSocket {
   userId: string;
   socketId: string;
+  
 }
 
 const userSockets: UserSocket[] = [];
