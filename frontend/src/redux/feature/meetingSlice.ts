@@ -25,9 +25,10 @@ export const meetingSlice = createSlice({
     addParticipant: (state, action: PayloadAction<{ userId: string; userName: string }>) => {
       state.participants.push(action.payload);
     },
-    removeParticipant: (state, action: PayloadAction<string>) => {
-      state.participants = state.participants.filter(p => p.userId !== action.payload);
+    removeParticipant: (state, action) => {
+      state.participants = state.participants.filter(p => p._id !== action.payload);
     },
+
     addMessage: (state, action: PayloadAction<Message>) => {
       state.messages.push(action.payload);
     },

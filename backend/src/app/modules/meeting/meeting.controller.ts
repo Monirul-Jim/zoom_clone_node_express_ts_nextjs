@@ -1,11 +1,6 @@
 import { Request, Response } from 'express';
 import { createMeeting, joinMeeting } from './meeting.service';
 import { socketVerifyToken as verifyToken } from '../../utils/socketVerifyToken';
-/**
- * Creates a new meeting.
- * @param req The request object.
- * @param res The response object.
- */
 
 export const createMeetingController = async (req: Request, res: Response): Promise<void> => { //Added Promise<void>
     try {
@@ -26,11 +21,7 @@ export const createMeetingController = async (req: Request, res: Response): Prom
     }
 };
 
-/**
- * Joins an existing meeting.
- * @param req The request object.
- * @param res The response object.
- */
+
 export const joinMeetingController = async (req: Request, res: Response): Promise<void> => { //Added Promise<void>
     try {
         const { meetingId, password } = req.body;

@@ -3,7 +3,7 @@ import { useAppSelector } from "@/redux/hooks";
 
 export default function Participants() {
   const participants = useAppSelector(state => state.meeting.participants);
-
+console.log(participants,' hello this is all from participants ')
   return (
     <div className="p-4 border rounded-lg shadow w-full max-w-md mt-4">
       <h2 className="font-bold mb-2">Participants</h2>

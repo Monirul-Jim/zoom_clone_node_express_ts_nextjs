@@ -67,7 +67,7 @@ export default function MeetingPage({ params }: Props) {
     return (
         <div className="h-screen flex flex-col bg-gray-900 text-white">
             <div className="flex-grow relative">
-                <VideoGrid />
+                <VideoGrid  />
                 <button
                     onClick={toggleChat}
                     className="absolute top-4 right-4 bg-gray-700 p-2 rounded-md shadow-md z-10 hover:bg-gray-600"
